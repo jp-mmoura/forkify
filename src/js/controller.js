@@ -2,10 +2,11 @@ import * as model from './model.js';
 import recipeView from './views/recipeView.js';
 import searchView from './views/searchView.js';
 import resultsView from './views/resultsView.js';
+import paginationView from './views/paginationView.js';
 
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { async } from 'regenerator-runtime'; 
+// SÓ por precaução import { async } from 'regenerator-runtime'; 
 
 if(module.hot){
   module.hot.accept(); 
@@ -29,25 +30,28 @@ const controlSearchResults = async function(){
   try{  
     resultsView.renderSpinner();
 
-    const query = searchView.getQuery(query);
+    const query = searchView.getQuery();
     if(!query) return; 
     
-    await model.loadSearchResults();
+    await model.loadSearchResults(query);
 
-    resultsView.render(model.state.search.results);
+    resultsView.render(model.getSearchResultsPage());
+
+    paginationView.render(model.state.search);
   }catch(err){
     console.log(err);
   }
 };
-controlSearchResults();
+
+const controlPagination = function(goToPage){
+  resultsView.render(model.getSearchResultsPage(goToPage));
+
+  paginationView.render(model.state.search);
+}
 
 const init = function(){
   recipeView.addHandlerRender(controlRecipes);
   searchView.addHandlerSearch(controlSearchResults);
-}
+  paginationView.addHandlerRender(controlPagination);
+};
 init();
-
-/* The array does the same as this two lines of code here:
-window.addEventListener('hashchange', showRecipe);
-window.addEventListener('load', showRecipe);
-*/
